@@ -1,0 +1,18 @@
+[
+    {
+        "modid": "discordchatrelay",
+        "name": "Discord Chat Relay",
+        "description": "A mod to relay chat between a discord server and a minecraft server",
+        "version": "${version}",
+        "mcversion": "${mcversion}",
+        "url": "",
+        "updateUrl": "",
+        "authorList": [
+            "jtljac"
+        ],
+        "credits": "",
+        "logoFile": "",
+        "screenshots": [],
+        "dependencies": []
+    }
+]
