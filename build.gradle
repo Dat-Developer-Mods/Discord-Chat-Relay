@@ -1,21 +1,27 @@
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
-        jcenter()
+        // These repositories are only for Gradle plugins, put any other repositories in the repository block further below
+        maven { url = 'https://maven.minecraftforge.net' }
         mavenCentral()
+        gradlePluginPortal()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+        classpath 'gradle.plugin.com.github.jengelman.gradle.plugins:shadow:7.0.0'
     }
 }
 
+apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'maven-publish'
 
 group = 'com.datdeveloper'
-version = '1.0-SNAPSHOT'
-archivesBaseName = 'discordchatrelay'
+version = '0.1.0'
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8'
+java {
+    archivesBaseName = 'discordchatrelay'
+    toolchain.languageVersion = JavaLanguageVersion.of(8)
+}
 
 minecraft {
     // The mappings can be changed at any time, and must be in the following format.
@@ -81,28 +87,36 @@ dependencies {
     // that the dep is a ForgeGradle 'patcher' dependency. And it's patches will be applied.
     // The userdev artifact is a special name and will get all sorts of transformations applied to it.
     minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2855'
-
-    implementation 'net.dv8tion:JDA:4.2+'
-    implementation 'com.google.code.gson:gson:2.8.6'
-
-    // You may put jars on which you depend on in ./libs or you may define them like so..
-    // compile "some.group:artifact:version:classifier"
-    // compile "some.group:artifact:version"
-
-    // Real examples
-    // compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
-    // compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
-
-    // The 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
-    // provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // These dependencies get remapped to your current MCP mappings
-    // deobf 'com.mod-buildcraft:buildcraft:6.0.8:dev'
-
-    // For more info...
-    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
-    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+    shadow('net.dv8tion:JDA:4.3+') {
+        exclude module: 'opus-java'
+    }
 }
+
+shadowJar {
+    project.configurations.shadow.setTransitive(true)
+    configurations = [project.configurations.shadow]
+
+    relocate('org.apache', 'charrelay.org.apache') {
+        exclude 'org/apache/logging/**'
+    }
+    relocate 'org.json', 'charrelay.org.json'
+    relocate 'gnu.trove', 'charrelay.gnu.trove'
+    relocate 'com.mashape.unirest', 'charrelay.com.mashape.unirest'
+    relocate 'com.squareup', 'charrelay.com.squareup'
+    relocate 'okio', 'charrelay.okio'
+    relocate 'okhttp3', 'charrelay.okhttp3'
+    relocate 'net.dv8tion', 'charrelay.net.dv8tion'
+    relocate 'org.slf4j', 'charrelay.org.slf4j'
+    relocate 'com.neovisionaries.ws.client', 'charrelay.com.neovisionaries.ws.client'
+
+    relocate 'com.fasterxml.jackson', 'charrelay.com.fasterxml.jackson'
+    dependencies {
+        exclude(dependency('net.java.dev.jna:jna'))
+    }
+    exclude('module-info.class')
+}
+
+build.dependsOn shadowJar
 
 // Example for how to get properties into the manifest for reading by the runtime..
 jar {
@@ -116,6 +130,39 @@ jar {
                 "Implementation-Vendor"   : "jtljac",
                 "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
+    }
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", "1.12.2"
+
+    duplicatesStrategy DuplicatesStrategy.WARN
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':"1.12.2"
+    }
+
+    // copy everything else except the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = group
+            artifactId = archivesBaseName
+            version = version
+
+            from components.java
+        }
     }
 }
 

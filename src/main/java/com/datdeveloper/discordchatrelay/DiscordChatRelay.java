@@ -3,6 +3,7 @@ package com.datdeveloper.discordchatrelay;
 import com.datdeveloper.discordchatrelay.relay.DiscordRelay;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -54,6 +55,9 @@ public class DiscordChatRelay {
                 discordAPI = JDABuilder.createLight(ModConfig.discordToken, GatewayIntent.GUILD_MESSAGES)
                         .addEventListeners(new DiscordRelay(serverManager))
                         .build();
+
+                discordAPI.upsertCommand("setrelaychannel", "Set the channel that messages will be relayed to and from").setDefaultEnabled(false).queue();
+
             } catch (LoginException e) {
                 log.error("Failed to start Discord Chat Relay, the token appears to be invalid");
                 e.printStackTrace();
