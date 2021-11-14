@@ -11,6 +11,9 @@ import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartedEvent;
 
 import javax.security.auth.login.LoginException;
+
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import org.apache.logging.log4j.Logger;
 
 import java.io.FileNotFoundException;
@@ -26,7 +29,7 @@ public class DiscordChatRelay {
 
     public static final String MOD_ID = "discordchatrelay";
     public static final String MOD_NAME = "Discord Chat Relay";
-    public static final String VERSION = "1.0";
+    public static final String VERSION = "0.2.1";
     public static Logger log;
 
     public JDA discordAPI;
@@ -56,8 +59,7 @@ public class DiscordChatRelay {
                         .addEventListeners(new DiscordRelay(serverManager))
                         .build();
 
-                discordAPI.upsertCommand("setrelaychannel", "Set the channel that messages will be relayed to and from").setDefaultEnabled(false).queue();
-
+                discordAPI.upsertCommand("setrelaychannel", "Set the channel that messages will be relayed to and from").queue();
             } catch (LoginException e) {
                 log.error("Failed to start Discord Chat Relay, the token appears to be invalid");
                 e.printStackTrace();

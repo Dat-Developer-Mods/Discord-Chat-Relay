@@ -16,7 +16,7 @@ apply plugin: 'net.minecraftforge.gradle'
 apply plugin: 'maven-publish'
 
 group = 'com.datdeveloper'
-version = '0.1.0'
+version = '0.2.1'
 
 java {
     archivesBaseName = 'discordchatrelay'
@@ -114,6 +114,8 @@ shadowJar {
         exclude(dependency('net.java.dev.jna:jna'))
     }
     exclude('module-info.class')
+
+    classifier = null
 }
 
 build.dependsOn shadowJar
@@ -164,6 +166,10 @@ publishing {
             from components.java
         }
     }
+}
+
+reobf {
+    shadowJar {} // Reobfuscate the shadowed JAR
 }
 
 jar.finalizedBy('reobfJar')
